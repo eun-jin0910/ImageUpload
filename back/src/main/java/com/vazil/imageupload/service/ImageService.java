@@ -18,7 +18,7 @@ public class ImageService {
 
     public Mono<ImageFile> getById(String id) {
         LocalDateTime now = LocalDateTime.now();
-        System.out.println("===" + now + " getById-service " + "===");
+        System.out.println("=== " + now + " getById-service " + "===");
 
         return imageRepository.findById(id);
     }
@@ -31,9 +31,8 @@ public class ImageService {
 
     public Flux<ImageFile> getAll() {
         LocalDateTime now = LocalDateTime.now();
-        System.out.println("===" + now + " getAll-service " + "===");
+        System.out.println("=== " + now + " getAll-service " + "===");
 
         return imageRepository.findAll();
     }
-
 }

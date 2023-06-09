@@ -20,7 +20,7 @@ public class ImageFile {
     private String fileName;
     private String saveFileName;
     private String fileURL;
-    private String contentType;
+    private String type;
     private long size;
 
 }

@@ -7,6 +7,7 @@ import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.web.multipart.commons.CommonsMultipartResolver;
 
 @Configuration
 public class AwsS3Config {
@@ -22,7 +23,9 @@ public class AwsS3Config {
 
     @Bean
     public AmazonS3Client amazonS3Client() {
+        System.out.println("AwsS3Config-amazonS3Client 시작");
         BasicAWSCredentials awsCreds = new BasicAWSCredentials(accessKey, secretKey);
+        System.out.println("awsCreds : " + awsCreds);
         return (AmazonS3Client) AmazonS3ClientBuilder.standard()
                 .withRegion(region)
                 .withCredentials(new AWSStaticCredentialsProvider(awsCreds))

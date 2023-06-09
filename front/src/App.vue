@@ -39,6 +39,7 @@
 
     <v-main>
       <!-- <HelloWorld/> -->
+      <ImageList/>
       <ImageUpload/>
     </v-main>
   </v-app>
@@ -47,14 +48,14 @@
 <script>
 // import HelloWorld from './components/HelloWorld';
 import ImageUpload from './components/ImageUpload';
+import ImageList from './components/ImageList.vue';
 
 export default {
   name: 'App',
 
   components: {
-    // HelloWorld,
-    // ImageShow,
     ImageUpload,
+    ImageList,
   },
 
   data: () => ({
