@@ -42,13 +42,13 @@ public class ImageController {
         return img;
     }
 
-//    @GetMapping("/image/{userId}")
-//    public Mono<Map<String, ImageFile>> selectImageByUserId(@PathVariable(value = "userId") String userId) {
-//        log.info("selectImageByUserId-controller");
-//        Flux<ImageFile> imageFileFlux = imageService.getByUserId(userId);
-//        return imageFileFlux
-//                .collectMap(ImageFile::getFileURL);
-//    }
+    @GetMapping("/image/{userId}")
+    public Mono<Map<String, ImageFile>> selectImageByUserId(@PathVariable(value = "userId") String userId) {
+        log.info("selectImageByUserId-controller");
+        Flux<ImageFile> imageFileFlux = imageService.getByUserId(userId);
+        return imageFileFlux
+                .collectMap(ImageFile::getFileURL);
+    }
 
     @GetMapping("/images")
     public Mono<Map<String, ImageFile>> selectAllImages() {
@@ -59,23 +59,20 @@ public class ImageController {
     }
 
     @PostMapping(value = "/image", consumes = "multipart/form-data")
-    public Mono<String> insertImage(ServerWebExchange exchange, @RequestPart("image") Mono<FilePart> filePartMono) throws IOException {
+    public Mono<String> insertImage(ServerWebExchange exchange,
+                                    @RequestPart("image") Mono<FilePart> filePartMono,
+                                    @RequestPart("uploaderName") String uploaderName,
+                                    @RequestPart("imageTitle") String imageTitle) {
         LocalDateTime now = LocalDateTime.now();
         log.info("=== " + now + " insertImage-controller " + "===");
-        log.info(exchange);
-        System.out.println(exchange);
 
         return filePartMono.flatMap(filePart -> {
-            System.out.println(filePart.toString());
-            System.out.println(filePart != null);
-            System.out.println(filePart.getClass());
             try {
                 if (filePart != null) {
-                    System.out.println("여기1");
                     String imageURL = awsS3Service.upload(filePart);
-                    System.out.println("여기2");
-                    log.info(imageURL);
                     System.out.println("imageURL : " + imageURL);
+                    System.out.println("uploaderName : " + uploaderName);
+                    System.out.println("imageTitle : " + imageTitle);
                     return Mono.just("File uploaded successfully");
                 } else {
                     throw new IllegalArgumentException("File part is null");
@@ -89,14 +86,6 @@ public class ImageController {
         });
     }
 
-//    @PostMapping(value = "/image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-//    public String insertImage(@RequestParam("image") MultipartFile multipartFile) throws IOException {
-//        LocalDateTime now = LocalDateTime.now();
-//        log.info("=== " + now + " insertImage-controller " + "===");
-//        String imageURL = awsS3Service.upload(multipartFile);
-//        log.info(imageURL);
-//        return imageURL;
-//    }
 
     @PatchMapping("/image")
     public void updateImagePatch() {

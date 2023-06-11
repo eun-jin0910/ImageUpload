@@ -1,65 +1,35 @@
 <template>
   <v-app>
-    <v-app-bar
-      app
-      color="primary"
-      dark
-    >
-      <div class="d-flex align-center">
-        <v-img
-          alt="Vuetify Logo"
-          class="shrink mr-2"
-          contain
-          src="https://cdn.vuetifyjs.com/images/logos/vuetify-logo-dark.png"
-          transition="scale-transition"
-          width="40"
-        />
-
-        <v-img
-          alt="Vuetify Name"
-          class="shrink mt-1 hidden-sm-and-down"
-          contain
-          min-width="100"
-          src="https://cdn.vuetifyjs.com/images/logos/vuetify-name-dark.png"
-          width="100"
-        />
-      </div>
-
-      <v-spacer></v-spacer>
-
-      <v-btn
-        href="https://github.com/vuetifyjs/vuetify/releases/latest"
-        target="_blank"
-        text
-      >
-        <span class="mr-2">Latest Release</span>
-        <v-icon>mdi-open-in-new</v-icon>
-      </v-btn>
+    <v-app-bar app color="primary" dark>
+      <v-app-bar-nav-icon @click.stop="drawer = !drawer"></v-app-bar-nav-icon>
+      <v-toolbar-title>Image Upload</v-toolbar-title>
     </v-app-bar>
 
+    <v-navigation-drawer v-model="drawer" app>
+      <v-list>
+        <v-list-item v-for="(item, index) in menuItems" :key="index" :to="item.route">
+          <v-list-item-title>{{ item.title }}</v-list-item-title>
+        </v-list-item>
+      </v-list>
+    </v-navigation-drawer>
+
     <v-main>
-      <!-- <HelloWorld/> -->
-      <ImageList/>
-      <ImageUpload/>
+      <router-view></router-view>
     </v-main>
   </v-app>
 </template>
 
 <script>
-// import HelloWorld from './components/HelloWorld';
-import ImageUpload from './components/ImageUpload';
-import ImageList from './components/ImageList.vue';
-
 export default {
-  name: 'App',
-
-  components: {
-    ImageUpload,
-    ImageList,
+  data() {
+    return {
+      drawer: false,
+      menuItems: [
+        { title: 'Home', route: '/' },
+        { title: 'Image', route: '/show' },
+        { title: 'Upload', route: '/upload' },
+      ],
+    };
   },
-
-  data: () => ({
-    //
-  }),
 };
 </script>

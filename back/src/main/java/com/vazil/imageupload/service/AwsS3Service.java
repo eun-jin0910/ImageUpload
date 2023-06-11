@@ -32,7 +32,6 @@ public class AwsS3Service {
         String s3FileName = UUID.randomUUID() + "-" + filePart.filename(); // 파일 이름 생성
         System.out.println("s3FileName : " + s3FileName);
         ObjectMetadata objMeta = new ObjectMetadata(); // S3에 업로드되는 객체의 메타데이터 설정
-
         objMeta.setContentLength(filePart.headers().getContentLength()); // 파일 크기 설정
 
         Path tempFile = Files.createTempFile("temp", "file");
@@ -42,12 +41,12 @@ public class AwsS3Service {
         filePart.transferTo(tempFile.toFile())
                 .doOnSuccess(uploaded -> {
                     try {
-                        channel.close(); // 임시 파일 쓰기 완료 후 채널 종료
+                        channel.close();
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
                 })
-                .subscribe(); // 구독 시작
+                .subscribe();
 
         // 임시 파일로부터 InputStream 얻기
         InputStream inputStream = Files.newInputStream(tempFile, StandardOpenOption.READ);
@@ -56,5 +55,4 @@ public class AwsS3Service {
         amazonS3.putObject(bucket, s3FileName, inputStream, objMeta); // S3 버킷에 파일 업로드
         return amazonS3.getUrl(bucket, s3FileName).toString();
     }
-
 }

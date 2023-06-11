@@ -15,12 +15,12 @@ public class ImageFile {
 
     @Id
     private ObjectId _id;
-    private String id;
+    private String no;
     private String userId;
     private String fileName;
-    private String saveFileName;
+    private String title;
     private String fileURL;
     private String type;
     private long size;
-
+    private String uploadDate;
 }

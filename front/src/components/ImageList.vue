@@ -1,7 +1,7 @@
 <template>
     <v-container>
         <div>
-            <h1>이미지 목록</h1>
+            <!-- <h1>이미지 목록</h1> -->
             <table>
             <colgroup>
                 <col width="4%" />
@@ -21,8 +21,8 @@
             </thead>
             <tbody>
             <tr v-for="image in images" :key="image.fileURL">
-                <td>{{ image.id }}</td>
-                <td></td>
+                <td>{{ image.no }}</td>
+                <td>{{ image.title }}</td>
                 <td>{{ image.fileName }}</td>
                 <td>{{ image.userId }}</td>
                 <td>{{ image.uploadDate }}</td>

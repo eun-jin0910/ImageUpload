@@ -28,11 +28,10 @@ public class ImageService {
         return imageRepository.findByUserId(userId);
     }
 
-
     public Flux<ImageFile> getAll() {
         LocalDateTime now = LocalDateTime.now();
         System.out.println("=== " + now + " getAll-service " + "===");
-
         return imageRepository.findAll();
     }
+
 }

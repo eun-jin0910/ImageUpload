@@ -1,84 +1,79 @@
 <template>
     <v-container>
-        <div class="">
-            <h1>이미지 업로드</h1>
-            <input type="file" @change="handleFileSelect">
-        </div>
-        <div>
-            <div class="image-grid">
-                <img v-for="image in images" :key="image.fileURL" :src="image.fileURL" alt="Image" 
-                class="image" id="image" accept="image/png, image/gif, image/jpeg" multiple>
-            </div>
-        </div>
-    </v-container>
-</template>
+      <div class="">
+        <!-- <h1>이미지 업로드</h1> -->
+        <v-btn color="primary" @click="openDialog">이미지 업로드</v-btn>
+      </div>
   
-<script>
-import axios from 'axios';
-export default {
+      <v-dialog v-model="dialog" max-width="500">
+        <v-card>
+          <v-card-title>이미지 업로드</v-card-title>
+          <v-card-text>
+            <v-text-field v-model="userId" label="사용자 이름"></v-text-field>
+            <v-text-field v-model="uploaderPw" label="비밀번호"></v-text-field>
+            <v-text-field v-model="uploaderTitle" label="제목"></v-text-field>
+            <v-text-field v-model="currentDateTime" label="등록일" readonly></v-text-field>
+            <input type="file" @change="handleFileSelect">
+          </v-card-text>
+          <v-card-actions>
+            <v-spacer></v-spacer>
+            <v-btn color="blue darken-1" text @click="dialog = false">취소</v-btn>
+            <v-btn color="blue darken-1" text @click="uploadImage">업로드</v-btn>
+          </v-card-actions>
+        </v-card>
+      </v-dialog>
+    </v-container>
+  </template>
+  
+  <script>
+  import axios from 'axios';
+  
+  export default {
     data() {
-        return {
-        images: []
-        };
-    },
-    created() {
-        this.fetchImages();
+      return {
+        dialog: false,
+        selectedFile: null,
+        uploaderName: '',
+        uploaderTitle: '',
+        currentDateTime: '',
+      };
     },
     methods: {
-        fetchImages() {
-        axios.get('http://localhost:8080/images')
-            .then(response => {
-                this.images = Object.values(response.data);
-            })
-            .catch(error => {
-                console.error(error);
-            });
-        },
-
-        handleFileSelect(event) {
-            console.log("handleFileSelect");
-            const file = event.target.files[0];
-            console.log('file', file);
-
-            const formData = new FormData();
-            formData.append('image', file);
-            // formData.append('userId', 'asdf');
-
-            console.log('formData', formData);
-            console.log(formData.get('image'));
-
-            axios.post('http://localhost:8080/image', formData, {
-                headers: {
-                    "Content-Type": "multipart/form-data"
-                }
-            })
-            .then(response => {
-                console.log(response);
-            })
-            .catch(error => {
-                console.error(error);
-            });
-        }
-    }
-};
-
-</script>
+      openDialog() {
+        this.dialog = true;
+      },
+      handleFileSelect(event) {
+        this.selectedFile = event.target.files[0];
+      },
+      uploadImage() {
+        const formData = new FormData();
+        formData.append('image', this.selectedFile);
+        formData.append('uploaderName', this.uploaderName);
+        formData.append('uploaderTitle', this.uploaderTitle);
+        formData.append('currentDateTime', this.currentDateTime);
   
-<style>
-.image-grid {
-    display: grid;
-    grid-template-columns: repeat(10, 1fr);
-    gap: 10px;
-}
-.image {
-    margin: 20px;
-    margin-left: 0 !important;
-    padding: 0 !important;
-    border-radius: 4px;
-    box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.2);
-    width: 200px;
-    height: 200px;
-    object-fit: cover;
-}
-</style>
+        axios
+          .post('http://localhost:8080/image', formData, {
+            headers: {
+              'Content-Type': 'multipart/form-data',
+            },
+          })
+          .then(response => {
+            console.log(response);
+          })
+          .catch(error => {
+            console.error(error);
+          });
+  
+        this.dialog = false;
+      },
+    },
+    created() {
+      this.currentDateTime = new Date().toLocaleString();
+    },
+  };
+  </script>
+  
+  <style>
+  </style>
   
