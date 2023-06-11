@@ -16,7 +16,7 @@
         <v-img :src="selectedImage.fileURL" :alt="selectedImage.fileName" class="modal-image" />
   
         <v-card>
-          <v-card-title>{{ selectedImage.fileName }}</v-card-title>
+          <v-card-title>{{ selectedImage.title }}</v-card-title>
           <v-card-text>
             <p><strong>파일명:</strong> {{ selectedImage.fileName }}</p>
             <p><strong>아이디:</strong> {{ selectedImage.userId }}</p>
@@ -76,8 +76,7 @@
   }
   
   .image {
-    margin: 20px;
-    margin-left: 0 !important;
+    margin: 0 20px 20px 0;
     padding: 0 !important;
     border-radius: 4px;
     box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.2);

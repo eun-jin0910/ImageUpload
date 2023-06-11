@@ -1,6 +1,6 @@
 <template>
   <v-app>
-    <ImageSearch/>
+    <!-- <ImageSearch/> -->
     <ImageList/>
     <ImageUpload/>
     <ImagePreview/>
@@ -11,14 +11,14 @@
 import ImageUpload from './ImageUpload';
 import ImageList from './ImageList.vue';
 import ImagePreview from './ImagePreview.vue';
-import ImageSearch from './ImageSearch.vue';
+// import ImageSearch from './ImageSearch.vue';
 
   export default {
     components: {
       ImageUpload,
       ImageList,
       ImagePreview,
-      ImageSearch,
+      // ImageSearch,
   },
     data () {
       return {
