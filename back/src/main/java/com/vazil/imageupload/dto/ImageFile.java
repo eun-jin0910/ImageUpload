@@ -5,22 +5,23 @@ import org.bson.types.ObjectId;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-@Document(collection = "image")
+@Document(collection = "imageFile")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @ToString
+@Builder
 public class ImageFile {
 
     @Id
     private ObjectId _id;
-    private String no;
     private String userId;
+    private String userPw;
     private String fileName;
     private String title;
     private String fileURL;
-    private String type;
-    private long size;
     private String uploadDate;
+    private String fileType;
+    private String updateDate;
 }

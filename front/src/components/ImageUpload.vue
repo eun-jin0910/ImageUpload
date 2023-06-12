@@ -1,25 +1,28 @@
 <template>
   <v-container class="upload-container">
     <div class="drop-area" @drop.prevent="handleFileDrop" @dragover.prevent>
-      <p v-if="selectedFiles.length === 0" class="drag-text">여기에 파일을 드래그하세요</p>
+      <p v-if="selectedFiles.length === 0" class="drag-text">
+        <v-icon class="custom-icon upload-icon large-icon x-large">mdi-cloud-upload</v-icon><br>
+        여기에 파일을 드래그하세요</p>
       <div v-else>
         <div v-for="(file, index) in selectedFiles" :key="index" class="file-item">
           <span class="file-name">{{ file.name }}</span>
           <span class="delete-file" @click="removeFile(index)">x</span>
         </div>
       </div>
+      <v-btn class="upload-button" color="primary" @click="openDialog">이미지 업로드</v-btn>
     </div>
 
-    <v-btn class="upload-button" color="primary" @click="openDialog">이미지 업로드</v-btn>
+    
 
     <v-dialog v-model="dialog" max-width="500" @closed="resetDropArea">
       <v-card>
         <v-card-title>이미지 업로드</v-card-title>
         <v-card-text>
-          <v-text-field v-model="uploaderName" label="사용자 이름"></v-text-field>
-          <v-text-field v-model="uploaderPw" label="비밀번호"></v-text-field>
-          <v-text-field v-model="uploaderTitle" label="제목"></v-text-field>
-          <v-text-field v-model="currentDateTime" label="등록일" readonly></v-text-field>
+          <v-text-field v-model="userId" label="사용자 아이디"></v-text-field>
+          <v-text-field v-model="userPw" label="비밀번호"></v-text-field>
+          <v-text-field v-model="title" label="제목"></v-text-field>
+          <v-text-field v-model="uploadDate" label="등록일" readonly></v-text-field>
           <div class="file-input-container">
             <input type="file" @change="handleFileSelect" ref="fileInput" style="display: none;" multiple>
             <v-btn class="file-button" color="primary" @click="$refs.fileInput.click()">파일 선택</v-btn>
@@ -34,7 +37,7 @@
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn color="blue darken-1" text @click="dialog = false">취소</v-btn>
-          <v-btn color="blue darken-1" text @click="uploadImage">업로드</v-btn>
+          <v-btn color="blue darken-1" text @click="uploadImage" :disabled="isUploadDisabled">업로드</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -49,10 +52,15 @@ export default {
     return {
       dialog: false,
       selectedFiles: [],
-      uploaderName: '',
-      uploaderTitle: '',
-      currentDateTime: '',
+      uploadCompleted: false,
     };
+  },
+  computed: {
+    isUploadDisabled() {
+      return (
+        this.selectedFiles.length === 0
+      );
+    },
   },
   methods: {
     openDialog() {
@@ -79,10 +87,10 @@ export default {
       this.selectedFiles.forEach(file => {
         formData.append('images', file);
       });
-      formData.append('uploaderName', this.uploaderName);
-      formData.append('uploaderTitle', this.uploaderTitle);
-      formData.append('currentDateTime', this.currentDateTime);
-
+      formData.append('userId', this.userId);
+      formData.append('userPw', this.userPw);
+      formData.append('title', this.title);
+      formData.append('uploadDate', this.uploadDate);
       axios
         .post('http://localhost:8080/image', formData, {
           headers: {
@@ -91,16 +99,17 @@ export default {
         })
         .then(response => {
           console.log(response);
+          window.location.reload(); 
         })
         .catch(error => {
           console.error(error);
         });
         this.selectedFiles = [];
         this.dialog = false;
-    },
+    },    
   },
   created() {
-    this.currentDateTime = new Date().toLocaleString();
+    this.uploadDate = new Date().toLocaleString();
   },
 };
 </script>
@@ -111,7 +120,7 @@ export default {
 }
 .drop-area {
   border: 2px dashed #ccc;
-  padding: 20px;
+  padding: 50px 20px;
   text-align: center;
   cursor: pointer;
 }
@@ -124,6 +133,7 @@ export default {
 }
 .file-name {
   margin-right: 8px;
+  text-align: center;
 }
 .delete-file {
   color: red;
@@ -131,5 +141,9 @@ export default {
 }
 .upload-button {
   margin-top: 10px;
+}
+.upload-completed-message {
+  margin-top: 10px;
+  color: green;
 }
 </style>

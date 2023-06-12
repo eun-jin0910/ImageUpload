@@ -8,17 +8,13 @@ import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.codec.multipart.FilePart;
-import org.springframework.http.codec.multipart.Part;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.io.File;
 import java.io.IOException;
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.Map;
 
 @CrossOrigin("*")
@@ -36,7 +32,7 @@ public class ImageController {
         LocalDateTime now = LocalDateTime.now();
         log.info("=== " + now + " selectImage-controller " + "===");
         String _id = "647fd9a985f3b776565b6094";
-        Mono<ResponseEntity<ImageFile>> img = imageService.getById(_id)
+        Mono<ResponseEntity<ImageFile>> img = imageService.getImage(_id)
                 .map(imageFile -> ResponseEntity.ok(imageFile))
                 .defaultIfEmpty(ResponseEntity.notFound().build());
         return img;
@@ -45,47 +41,57 @@ public class ImageController {
     @GetMapping("/image/{userId}")
     public Mono<Map<String, ImageFile>> selectImageByUserId(@PathVariable(value = "userId") String userId) {
         log.info("selectImageByUserId-controller");
-        Flux<ImageFile> imageFileFlux = imageService.getByUserId(userId);
+        Flux<ImageFile> imageFileFlux = imageService.getImageByUserId(userId);
         return imageFileFlux
                 .collectMap(ImageFile::getFileURL);
     }
 
     @GetMapping("/images")
-    public Mono<Map<String, ImageFile>> selectAllImages() {
+    public Flux<ImageFile> selectAllImages() {
         log.info("selectAllImages-controller");
-        Flux<ImageFile> imageFileFlux = imageService.getAll();
-        return imageFileFlux
-                .collectMap(ImageFile::getFileURL);
+        Flux<ImageFile> imageFileFlux = imageService.getAllImages()
+                .filter(imageFile -> imageFile.getFileURL() != null);
+        return imageFileFlux;
     }
 
     @PostMapping(value = "/image", consumes = "multipart/form-data")
-    public Mono<String> insertImage(ServerWebExchange exchange,
-                                    @RequestPart("image") Mono<FilePart> filePartMono,
-                                    @RequestPart("uploaderName") String uploaderName,
-                                    @RequestPart("imageTitle") String imageTitle) {
-        LocalDateTime now = LocalDateTime.now();
-        log.info("=== " + now + " insertImage-controller " + "===");
-
-        return filePartMono.flatMap(filePart -> {
+    public Flux<String> insertImage(ServerWebExchange exchange,
+                                    @RequestPart("images") Flux<FilePart> filePartFlux,
+                                    @RequestPart("userId") String userId,
+                                    @RequestPart("userPw") String userPw,
+                                    @RequestPart("title") String title,
+                                    @RequestPart("uploadDate") String uploadDate) {
+        filePartFlux.count().subscribe(count -> log.info("전송된 파일 개수: " + count));
+        return filePartFlux.flatMapSequential(filePart -> { // Flux의 각 요소 비동기 처리
             try {
                 if (filePart != null) {
-                    String imageURL = awsS3Service.upload(filePart);
-                    System.out.println("imageURL : " + imageURL);
-                    System.out.println("uploaderName : " + uploaderName);
-                    System.out.println("imageTitle : " + imageTitle);
-                    return Mono.just("File uploaded successfully");
+                    String fileURL = awsS3Service.upload(filePart); // AWS S3 업로드 => URL 반환
+                    String fileType = filePart.headers().getContentType().toString();
+                    ImageFile imageFile = ImageFile.builder()
+                            .fileType(fileType)
+                            .userId(userId)
+                            .userPw(userPw)
+                            .fileName(title)
+                            .title(title)
+                            .uploadDate(uploadDate)
+                            .updateDate("")
+                            .fileURL(fileURL)
+                            .build();
+                    Mono<ImageFile> imageFileMono = Mono.just(imageFile);
+                    ResponseEntity<Mono<ImageFile>> entity = ResponseEntity.ok(imageFileMono);
+                    imageService.createImage(entity).subscribe();
+                    return Mono.just("업로드 성공").flux();
                 } else {
-                    throw new IllegalArgumentException("File part is null");
+                    return Flux.error(new IllegalArgumentException("이미지 파일 없음"));
                 }
             } catch (IOException e) {
-                return Mono.error(e);
+                return Flux.error(e);
             }
         }).onErrorResume(e -> {
-            log.error("Error occurred during image upload", e);
-            return Mono.just("File upload failed: " + e.getMessage());
+            log.error("이미지 업로드 실패", e);
+            return Flux.just("File upload failed: " + e.getMessage());
         });
     }
-
 
     @PatchMapping("/image")
     public void updateImagePatch() {

@@ -6,9 +6,6 @@
       <v-spacer></v-spacer>
       <v-text-field v-model="search" append-icon="mdi-magnify" label="이미지 검색" hide-details solo-inverted class="search-field" rounded></v-text-field>
       <v-spacer></v-spacer>
-      <!-- <v-btn text class="bar-btn">로그인</v-btn>
-      <v-btn text class="bar-btn">회원가입</v-btn>
-      <v-btn text class="bar-btn" id="upload-btn">업로드</v-btn> -->
     </v-app-bar>
 
     <v-navigation-drawer v-model="drawer" app class="menu-drawer">
