@@ -98,7 +98,22 @@ export default {
         });
     },
     downloadImage(fileURL) {
-      console.log('Downloading image:', fileURL);
+      axios
+        .get(fileURL, { responseType: 'blob' }) 
+        .then(response => {
+          const blob = response.data;
+          const url = URL.createObjectURL(blob); // Blob 객체 URL 생성
+          const link = document.createElement('a');
+          link.href = url;
+          link.setAttribute('download', 'image.jpg');
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          URL.revokeObjectURL(url); // Blob 객체 URL 해제
+        })
+        .catch(error => {
+          console.error(error);
+        });
     },
     openModal(image) {
       this.selectedImage = image;
