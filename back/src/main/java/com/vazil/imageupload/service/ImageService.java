@@ -6,10 +6,9 @@ import lombok.extern.log4j.Log4j2;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-
-import java.time.LocalDateTime;
 
 @Service
 @Log4j2
@@ -21,27 +20,33 @@ public class ImageService {
     }
 
 
-    public Mono<ImageFile> getImage(String id) {
-        LocalDateTime now = LocalDateTime.now();
-        System.out.println("=== " + now + " getById-service " + "===");
-
+    public Mono<ImageFile> getImageById(String id) {
+        log.info("***ImageService-getImage***");
         return imageRepository.findById(id);
     }
 
     public Flux<ImageFile> getImageByUserId(String userId) {
-        System.out.println("getById-service");
+        log.info("***ImageService-getImageByUserId***");
         return imageRepository.findByUserId(userId);
     }
-
+    public Mono<ImageFile> getImageByFileURL(String fileURL) {
+        log.info("***ImageService-getImageByFileURL***");
+        return imageRepository.findByFileURL(fileURL);
+    }
     public Flux<ImageFile> getAllImages() {
-        LocalDateTime now = LocalDateTime.now();
-        System.out.println("=== " + now + " getAll-service " + "===");
+        log.info("***ImageService-getAllImages***");
         return imageRepository.findAll(Sort.by(Sort.Direction.DESC, "uploadDate"));
     }
-
+    @Transactional
     public Mono<ImageFile> createImage(ResponseEntity<Mono<ImageFile>> entity) {
+        log.info("***ImageService-createImage***");
         Mono<ImageFile> imageFileMono = entity.getBody();
-        log.info("imageFileMono : " + imageFileMono.toString());
         return imageFileMono.flatMap(imageRepository::save);
     }
+
+    @Transactional
+    public Mono<Void> deleteImage(String fileURL) {
+        return imageRepository.deleteByFileURL(fileURL);
+    }
+
 }

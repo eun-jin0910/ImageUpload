@@ -2,34 +2,41 @@ import Vue from 'vue';
 import Router from 'vue-router';
 
 /* Router Modules */
-import HelloWorld from '../components/HelloWorld.vue';
-import ImageList from '../components/ImageList.vue';
-import ImagePreview from '../components/ImagePreview.vue';
-import ImageUpload from '../components/ImageUpload.vue';
-import ImageShow from '../components/ImageShow.vue';
-import ImageSearch from '../components/ImageSearch.vue';
+import LayoutHeader from '../components/LayoutHeader.vue';
+import HelloWorld from '../views/HelloWorld.vue';
+import ImageList from '../views/ImageList.vue';
+import ImageBoard from '../views/ImageBoard.vue';
+import ImageUpload from '../views/ImageUpload.vue';
+import ImageShow from '../views/ImageShow.vue';
+import ImageEditor from '../views/ImageEditor.vue';
+import ImageDetail from '../views/ImageDetail.vue';
 
 Vue.use(Router);
 
 export default new Router({
   routes: [
     {
+      path: '/header',
+      name: 'LayoutHeader',
+      component: LayoutHeader
+    },
+    {
       path: '/',
       name: 'HelloWorld',
       component: HelloWorld
     },
     {
-      path: '/list',
+      path: '/images/list',
       name: 'ImageList',
       component: ImageList
     },
     {
-      path: '/preview',
-      name: 'ImagePreview',
-      component: ImagePreview
+      path: '/images/board',
+      name: 'ImageBoard',
+      component: ImageBoard
     },
     {
-      path: '/show',
+      path: '/images',
       name: 'ImageShow',
       component: ImageShow
     },
@@ -39,9 +46,14 @@ export default new Router({
       component: ImageUpload
     },
     {
-      path: '/search',
-      name: 'ImageSearch',
-      component: ImageSearch
+      path: '/image/:image',
+      name: 'ImageEditor',
+      component: ImageEditor
+    },
+    {
+      path: '/image/:fileURL',
+      name: 'ImageDetail',
+      component: ImageDetail
     },
   ]
 });

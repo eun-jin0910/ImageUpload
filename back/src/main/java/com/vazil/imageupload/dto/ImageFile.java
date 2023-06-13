@@ -23,5 +23,4 @@ public class ImageFile {
     private String fileURL;
     private String uploadDate;
     private String fileType;
-    private String updateDate;
 }

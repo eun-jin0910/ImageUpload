@@ -6,13 +6,10 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.codec.multipart.FilePart;
 import org.springframework.stereotype.Service;
 import software.amazon.awssdk.core.async.AsyncRequestBody;
-import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3AsyncClient;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.nio.ByteBuffer;
 import java.nio.channels.AsynchronousFileChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -30,7 +27,7 @@ public class AwsS3Service {
     private final S3AsyncClient amazonS3;
 
     public String upload(FilePart filePart) throws IOException {
-        System.out.println("AwsS3Service-upload 시작");
+        log.info("***AwsS3Service-upload***");
         String s3FileName = UUID.randomUUID() + "-" + filePart.filename(); // 파일 이름 생성
         log.info("s3FileName : " + s3FileName);
 

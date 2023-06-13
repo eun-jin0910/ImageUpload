@@ -1,24 +1,21 @@
 <template>
   <v-app>
-    <!-- <ImageSearch/> -->
-    <ImageList/>
-    <ImageUpload/>
-    <ImagePreview/>
+    <image-list/>
+    <image-upload/>
+    <image-board/>
   </v-app>
 </template>
 
 <script>
 import ImageUpload from './ImageUpload';
 import ImageList from './ImageList.vue';
-import ImagePreview from './ImagePreview.vue';
-// import ImageSearch from './ImageSearch.vue';
+import ImageBoard from './ImageBoard.vue';
 
   export default {
     components: {
       ImageUpload,
       ImageList,
-      ImagePreview,
-      // ImageSearch,
+      ImageBoard,
   },
     data () {
       return {

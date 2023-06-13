@@ -9,12 +9,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.codec.multipart.FilePart;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.io.IOException;
-import java.time.LocalDateTime;
 import java.util.Map;
 
 @CrossOrigin("*")
@@ -29,38 +27,47 @@ public class ImageController {
 
     @GetMapping("/image")
     public Mono<ResponseEntity<ImageFile>> selectImage() {
-        LocalDateTime now = LocalDateTime.now();
-        log.info("=== " + now + " selectImage-controller " + "===");
+        log.info("***ImageController-selectImage***");
         String _id = "647fd9a985f3b776565b6094";
-        Mono<ResponseEntity<ImageFile>> img = imageService.getImage(_id)
+        Mono<ResponseEntity<ImageFile>> image = imageService.getImageById(_id)
                 .map(imageFile -> ResponseEntity.ok(imageFile))
                 .defaultIfEmpty(ResponseEntity.notFound().build());
-        return img;
+        return image;
     }
 
     @GetMapping("/image/{userId}")
     public Mono<Map<String, ImageFile>> selectImageByUserId(@PathVariable(value = "userId") String userId) {
-        log.info("selectImageByUserId-controller");
+        log.info("***ImageController-selectImageByUserId***");
         Flux<ImageFile> imageFileFlux = imageService.getImageByUserId(userId);
         return imageFileFlux
                 .collectMap(ImageFile::getFileURL);
     }
 
+    @GetMapping("/image/{fileURL}")
+    public Mono<ResponseEntity<ImageFile>> selectImageByFileURL(@PathVariable(value = "fileURL") String fileURL) {
+        log.info("***ImageController-selectImageByFileURL***");
+        Mono<ResponseEntity<ImageFile>> image = imageService.getImageByFileURL(fileURL)
+                .map(imageFile -> ResponseEntity.ok(imageFile))
+                .defaultIfEmpty(ResponseEntity.notFound().build());
+        return image;
+    }
+
+
     @GetMapping("/images")
     public Flux<ImageFile> selectAllImages() {
-        log.info("selectAllImages-controller");
+        log.info("***ImageController-selectAllImages***");
         Flux<ImageFile> imageFileFlux = imageService.getAllImages()
                 .filter(imageFile -> imageFile.getFileURL() != null);
         return imageFileFlux;
     }
 
     @PostMapping(value = "/image", consumes = "multipart/form-data")
-    public Flux<String> insertImage(ServerWebExchange exchange,
-                                    @RequestPart("images") Flux<FilePart> filePartFlux,
+    public Flux<String> insertImage(@RequestPart("images") Flux<FilePart> filePartFlux,
                                     @RequestPart("userId") String userId,
                                     @RequestPart("userPw") String userPw,
                                     @RequestPart("title") String title,
                                     @RequestPart("uploadDate") String uploadDate) {
+        log.info("***ImageController-insertImage***");
         filePartFlux.count().subscribe(count -> log.info("전송된 파일 개수: " + count));
         return filePartFlux.flatMapSequential(filePart -> { // Flux의 각 요소 비동기 처리
             try {
@@ -74,7 +81,6 @@ public class ImageController {
                             .fileName(title)
                             .title(title)
                             .uploadDate(uploadDate)
-                            .updateDate("")
                             .fileURL(fileURL)
                             .build();
                     Mono<ImageFile> imageFileMono = Mono.just(imageFile);
@@ -102,9 +108,15 @@ public class ImageController {
     public void updateImagePut() {
 
     }
+    @DeleteMapping(value = "/image")
+    public Mono<Void> deleteImage(@RequestBody Map<String, String> request) {
+        String fileURL = request.get("fileURL");
+        String userPw = request.get("userPw");
 
-    @DeleteMapping("/image")
-    public void deleteImage() {
+        log.info("***ImageController-deleteImage***");
+        log.info("fileURL: " + fileURL);
+        log.info("userPw: " + userPw);
 
+        return imageService.deleteImage(fileURL);
     }
 }

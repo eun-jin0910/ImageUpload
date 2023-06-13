@@ -8,5 +8,7 @@ import reactor.core.publisher.Mono;
 public interface ImageRepository extends ReactiveMongoRepository<ImageFile, String> {
 
     Flux<ImageFile> findByUserId(String userId);
+    Mono<ImageFile> findByFileURL(String fileURL);
     Mono<Long> count();
+    Mono<Void> deleteByFileURL(String fileURL);
 }
