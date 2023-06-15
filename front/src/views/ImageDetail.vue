@@ -1,10 +1,10 @@
 <template>
   <v-container>
     <div class="img-container">
-      <img :src="image.fileURL" :alt="image.fileName" class="edit-img"/>
+      <img :src="image && image.fileURL" :alt="image && image.fileName" class="edit-img"/>
       <v-card>
         <br>
-        <v-card-title>{{ image.title }}</v-card-title>
+        <v-card-title class="image-title">{{ image.title }}</v-card-title>
         <v-card-text>
           <br>
           <table class="info-table">
@@ -36,35 +36,54 @@
     </div>
     <v-row class="button-row">
       <v-btn color="primary" @click="goBack" class="btn">이전으로</v-btn>
-      <v-btn color="primary" @click="goToEdit" class="btn">수정하기</v-btn>
+      <v-btn color="primary" @click="openModal(image)" class="btn" >수정하기</v-btn>
     </v-row>
+    <v-dialog v-model="modalOpen" max-width="400">
+      <edit-modal :image="image" @close="closeModal" />
+    </v-dialog>
   </v-container>
 </template>
 
-
 <script>
+import EditModal from '../components/EditModal.vue';
+
 export default {
+  components: { EditModal },
   data() {
     return {
-      image: null,
+      image: {},
       editing: false,
+      modalOpen: false,
     };
   },
-  created() {
-    this.image = this.$route.params.image;
-    const hash = window.location.hash;
-    const value = hash.slice(2); // 앞의 '/#' 제거
-    this.fetchImage(value);
+  mounted() {
+    console.log(this.$route);
+    this.fetchImage(this.$route.params.id);
   },
   methods: {
+    fetchImage(id) {
+      this.$axios.get('/image/' + id)
+      .then(response => {
+        this.image = response.data
+        console.log(response)
+      })
+      .catch(error => {
+        console.log(error)
+      })
+    },
     goBack() {
       this.$router.go(-1);
     },
     goToEdit() {
       this.editing = true;
     },
-    saveChanges() {
-      
+    openModal(image) {
+      this.image = image;
+      this.modalOpen = true;
+    },
+    closeModal() {
+      this.modalOpen = false;
+      window.location.reload();
     }
   }
 };
@@ -74,19 +93,19 @@ export default {
 <style scoped>
 .img-container {
   display: flex;
-}
-.img-container {
-  display: flex;
   justify-content: center;
   width: 100%;
   max-width: 1000px;
   margin: 25px auto;
-  
 }
 .edit-img {
   max-width: 600px;
   max-height: 600px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+.image-title {
+  margin-left: 6px;
+  font-size: 2rem;
 }
 .button-row {
   justify-content: center;
@@ -100,13 +119,11 @@ export default {
   width: 100%;
   border: none;
 }
-
 .info-table td {
   padding: 8px;
   border: none; 
   vertical-align: top;
 }
-
 .info-table td:first-child {
   font-weight: bold;
   white-space: nowrap;

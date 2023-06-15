@@ -1,77 +1,115 @@
 <template>
-      <v-card>
-        <v-card-title>비밀번호를 입력하세요.</v-card-title>
-        <v-card-text>
-          <v-form ref="form">
-            <v-text-field
-              v-model="password"
-              label="비밀번호"
-              type="password"
-              outlined
-              dense
-              required
-            ></v-text-field>
-          </v-form>
-        </v-card-text>
-        <v-card-actions>
-          <v-btn color="error" text @click="editImage">확인</v-btn>
-          <v-spacer></v-spacer>
-          <v-btn text @click="closeModal">취소</v-btn>
-        </v-card-actions>
-      </v-card>
-
-  </template>
+  <v-card>
+    <v-card-title>이미지 수정</v-card-title>
+    <v-card-text>
+      <v-form ref="form">
+        <v-text-field v-model="userId" label="사용자 아이디"></v-text-field>
+        <v-text-field v-model="title" label="제목"></v-text-field>
+        <v-text-field v-model="uploadDate" label="수정일" readonly></v-text-field>
+        <v-text-field v-model="userPw" label="비밀번호"></v-text-field>
+        <div class="file-input-container">
+          <input type="file" @change="handleFileSelect" ref="fileInput" style="display: none;">
+          <v-btn class="file-button" color="primary" @click="$refs.fileInput.click()" :disabled="selectedFiles.length > 0">파일 선택</v-btn>
+          <div v-if="selectedFiles.length === 1">
+            <div class="file-item">
+              <span class="file-name">{{ selectedFiles[0].name }}</span>
+              <span class="delete-file" @click="removeFile(0)">x</span>
+            </div>
+          </div>
+        </div>
+      </v-form>
+    </v-card-text>
+    <v-card-actions>
+      <v-spacer></v-spacer>
+      <v-btn color="blue darken-1" text @click="closeModal">취소</v-btn>
+      <v-btn color="blue darken-1" text @click="editImage">저장</v-btn>
+    </v-card-actions>
+  </v-card>
+</template>
   
-  <script>
-  // import axios from 'axios';
+<script>
+export default {
+  props: {
+    image: {
+      type: Object,
+      required: true
+    }
+  },
+  data() {
+    return {
+      userId: '',
+      title: '',
+      uploadDate: '',
+      userPw: '',
+      selectedFiles: [],
+    };
+  },
+  created() {
+    this.uploadDate = new Date().toLocaleString();
+    this.userId = this.image.userId;
+    this.title = this.image.title;
+    this.selectedFiles = [{ name: this.image.fileURL }]; 
+  },
+  methods: {
+    onFileInputChange(event) {
+      this.file = event.target.files[0];
+    },
+    editImage() {
+      const selectedFile = this.selectedFiles[0];
+      console.log('selectedFile', selectedFile);
+      const formData = new FormData();
+      formData.append('id', this.image.id);
+      formData.append('userId', this.userId || 'undefined');
+      formData.append('userPw', this.userPw || 'undefined');
+      formData.append('title', this.title || 'undefined');
+      formData.append('uploadDate', this.uploadDate);
+      if (selectedFile.name != this.image.fileURL) {
+        console.log(this.image.fileURL);
+        formData.append('image', selectedFile);
+        this.$axios.put('/image', formData)
+        .then(response => {
+          console.log(response);
+          this.$emit('close');
+          this.$refs.form.reset();
+        })
+        .catch(error => {
+          console.log(error);
+        });
+      } else {
+        formData.append('fileURL', this.image.fileURL);
+        formData.append('fileType', this.image.fileType);
+        formData.append('fileName', this.image.fileName);
+        this.$axios.patch('/image', formData)
+        .then(response => {
+          console.log(response);
+          this.$emit('close');
+          this.$refs.form.reset();
+        })
+        .catch(error => {
+          console.log(error);
+        })
+      }
+    },
+    handleFileSelect(event) {
+      this.selectedFiles = Array.from(event.target.files); 
+    },
+    removeFile(index) {
+      this.selectedFiles.splice(index, 1); 
+    },
+    closeModal() {
+      this.$emit('close');
+      this.$refs.form.reset();
+    }
+  }
+};
+</script>
 
-  // export default {
-  //   props: {
-  //       image: {
-  //       type: Object,
-  //       required: true
-  //       }
-  //   },
-  //   data() {
-  //     return {
-  //       password: ''
-  //     };
-  //   },
-  //   methods: {
-  //     editImage() {
-  //       const requestData = {
-  //           fileURL: this.image.fileURL,
-  //           userPw: this.password
-  //       };
-  //       console.log("URL : " + this.image.fileURL);
-  //       console.log("PW : " + this.password);
-  //       axios
-  //           .delete('http://localhost:8080/image', {
-  //               data: requestData,
-  //               headers: {
-  //               'Content-Type': 'application/json'
-  //               }
-  //           })
-  //           .then(response => {
-  //               console.log(response);
-  //               window.location.reload();
-  //               this.$emit('delete');
-  //               this.closeModal();
-  //               })
-  //           .catch(error => {
-  //           console.log(error);
-  //           this.error = '이미지 삭제에 실패했습니다.';
-  //       });
-  //     },
-  //     closeModal() {
-  //       this.$emit('close');
-  //       this.$refs.form.reset();
-  //     }
-  //   }
-  // };
-  </script>
-  
-  <style>
-
-  </style>
+<style>
+.file-item {
+  display: inline-block;
+}
+.file-name {
+  text-align: left;
+}
+</style>
   

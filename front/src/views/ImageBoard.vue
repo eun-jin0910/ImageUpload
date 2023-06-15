@@ -20,8 +20,16 @@
           <p><strong>등록일자:</strong> {{ selectedImage.uploadDate }}</p>
         </v-card-text>
       </v-card>
-      <v-card-actions>
+      <v-card-actions class="modal-actions">
         <v-spacer></v-spacer>
+        <v-btn color="blue darken-1" text @click="downloadImage(selectedImage.fileURL)">
+          저장
+        </v-btn>
+        
+        <router-link :to="{ name: 'ImageDetail', params: { id: selectedImage.id } }">
+          <v-btn color="primary" text>상세보기</v-btn>
+        </router-link>
+        
         <v-btn color="blue darken-1" text @click="closeModal">닫기</v-btn>
       </v-card-actions>
     </v-dialog>
@@ -29,8 +37,6 @@
 </template>
 
 <script>
-import axios from 'axios';
-
 export default {
   data() {
     return {
@@ -44,8 +50,7 @@ export default {
   },
   methods: {
     fetchImages() {
-      axios
-        .get('http://localhost:8080/images')
+      this.$axios.get('/images')
         .then(response => {
           this.images = Object.values(response.data);
         })
@@ -60,6 +65,24 @@ export default {
     closeModal() {
       this.modalOpen = false;
     },
+    downloadImage(fileURL) {
+      this.$axios.get(fileURL, { responseType: 'blob' }) 
+      .then(response => {
+        console.log('fileURL', fileURL);
+        const blob = response.data;
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.setAttribute('download', 'image.jpg');
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+      })
+      .catch(error => {
+        console.error(error);
+      });
+    },
   },
 };
 </script>
@@ -70,9 +93,8 @@ export default {
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
   gap: 10px;
 }
-
 .image {
-  margin: 0 20px 20px 0;
+  margin-right: 20px;
   padding: 0 !important;
   border-radius: 4px;
   box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.2);
@@ -81,10 +103,12 @@ export default {
   object-fit: cover;
   cursor: pointer;
 }
-
 .modal-image {
   max-width: 100%;
   max-height: 500px;
   object-fit: contain;
+}
+.modal-actions {
+  background-color: rgba(255, 255, 255, 0.9);
 }
 </style>

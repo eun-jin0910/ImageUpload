@@ -15,7 +15,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 public class ImageFile {
 
     @Id
-    private ObjectId _id;
+    private String id;
     private String userId;
     private String userPw;
     private String fileName;

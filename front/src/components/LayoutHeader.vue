@@ -1,13 +1,13 @@
 <template>
-  <v-app>
+  <v-container>
     <v-app-bar app color="primary" dark>
       <v-app-bar-nav-icon @click.stop="drawer = !drawer"></v-app-bar-nav-icon>
       <v-toolbar-title id="title">IMAGE UPLOAD</v-toolbar-title>
     </v-app-bar>
-    <v-navigation-drawer v-model="drawer" app class="menu-drawer">
+    <v-navigation-drawer v-model="drawer" app class="menu-drawer" >
       <v-list dense class="menu-list">
         <v-list-item-group v-model="selectedItem">
-          <v-list-item v-for="(item, index) in menuItems" :key="index" :to="item.route">
+          <v-list-item v-for="(item, index) in menuItems" :key="index" :to="item.route" >
             <v-list-item-icon>
               <v-icon class="menu-icon">{{ item.icon }}</v-icon>
             </v-list-item-icon>
@@ -18,23 +18,14 @@
         </v-list-item-group>
       </v-list>
     </v-navigation-drawer>
-    <v-main>
-      <v-container fluid>
-        <v-row>
-          <v-col>
-            <router-view></router-view>
-          </v-col>
-        </v-row>
-      </v-container>
-    </v-main>
-  </v-app>
+  </v-container>
 </template>
 
 <script>
 export default {
   data() {
     return {
-      drawer: true, 
+      drawer: null, 
       selectedItem: null,
       menuItems: [
         { title: 'HOME', route: '/', icon: 'mdi-home' },
@@ -86,5 +77,13 @@ export default {
 }
 .menu-icon {
   padding-left: 15px;
+}
+.v-container {
+  margin: 0;
+  padding: 0;
+}
+.v-main {
+  padding-top: 40px !important;
+  margin: 10px !important;
 }
 </style>

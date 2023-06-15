@@ -4,11 +4,11 @@
       <table>
         <colgroup>
           <col width="2%" />
-          <col width="15%" />
-          <col width="13%" />
-          <col width="5%" />
-          <col width="8%" />
           <col width="11%" />
+          <col width="16%" />
+          <col width="4%" />
+          <col width="7%" />
+          <col width="10%" />
           <col width="2%" />
           <col width="2%" />
         </colgroup>
@@ -30,8 +30,8 @@
               <td>
                   <div class="image-title">
                       {{ image.title }}
-                      <router-link :to="{ name: 'ImageDetail', params: { image: image, fileURL: image.fileURL } }">
-                        <v-icon small @click="openModal(image)">
+                      <router-link :to="{ name: 'ImageDetail', params: { id: image.id } }">
+                        <v-icon small>
                         mdi-image
                         </v-icon>
                       </router-link>
@@ -62,7 +62,6 @@
 </template>
 
 <script>
-import axios from 'axios';
 import DeleteModal from '../components/DeleteModal.vue';
 
 export default {
@@ -78,42 +77,40 @@ export default {
     this.fetchImages();
   },
   computed: {
-      sortedImages() {
-        return this.images.slice().sort((a, b) => new Date(b.uploadDate) - new Date(a.uploadDate)).map((image, index, array) => {
-          image.no = array.length - index;
-          return image;
-        });
-      },
-
+    sortedImages() {
+      return this.images.slice().sort((a, b) => new Date(b.uploadDate) - new Date(a.uploadDate)).map((image, index, array) => {
+        image.no = array.length - index;
+        return image;
+      });
+    },
   },
   methods: {
     fetchImages() {
-      axios
-        .get('http://localhost:8080/images')
-        .then(response => {
-          this.images = response.data;
-        })
-        .catch(error => {
-          console.error(error);
-        });
+      this.$axios.get('/images')
+      .then(response => {
+        this.images = response.data;
+      })
+      .catch(error => {
+        console.error(error);
+      });
     },
     downloadImage(fileURL) {
-      axios
-        .get(fileURL, { responseType: 'blob' }) 
-        .then(response => {
-          const blob = response.data;
-          const url = URL.createObjectURL(blob); // Blob 객체 URL 생성
-          const link = document.createElement('a');
-          link.href = url;
-          link.setAttribute('download', 'image.jpg');
-          document.body.appendChild(link);
-          link.click();
-          document.body.removeChild(link);
-          URL.revokeObjectURL(url); // Blob 객체 URL 해제
-        })
-        .catch(error => {
-          console.error(error);
-        });
+      this.$axios.get(fileURL, { responseType: 'blob' }) 
+      .then(response => {
+        console.log('fileURL', fileURL);
+        const blob = response.data;
+        const url = URL.createObjectURL(blob); // Blob 객체 URL 생성
+        const link = document.createElement('a');
+        link.href = url;
+        link.setAttribute('download', 'image.jpg');
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url); // Blob 객체 URL 해제
+      })
+      .catch(error => {
+        console.error(error);
+      });
     },
     openModal(image) {
       this.selectedImage = image;

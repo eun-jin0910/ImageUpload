@@ -3,17 +3,17 @@ import Router from 'vue-router';
 
 /* Router Modules */
 import LayoutHeader from '../components/LayoutHeader.vue';
-import HelloWorld from '../views/HelloWorld.vue';
+import ImageHome from '../views/ImageHome.vue';
 import ImageList from '../views/ImageList.vue';
 import ImageBoard from '../views/ImageBoard.vue';
 import ImageUpload from '../views/ImageUpload.vue';
 import ImageShow from '../views/ImageShow.vue';
-import ImageEditor from '../views/ImageEditor.vue';
 import ImageDetail from '../views/ImageDetail.vue';
 
 Vue.use(Router);
 
 export default new Router({
+  mode: 'history',
   routes: [
     {
       path: '/header',
@@ -22,8 +22,8 @@ export default new Router({
     },
     {
       path: '/',
-      name: 'HelloWorld',
-      component: HelloWorld
+      name: 'ImageHome',
+      component: ImageHome
     },
     {
       path: '/images/list',
@@ -46,12 +46,7 @@ export default new Router({
       component: ImageUpload
     },
     {
-      path: '/image/:image',
-      name: 'ImageEditor',
-      component: ImageEditor
-    },
-    {
-      path: '/image/:fileURL',
+      path: '/image/:id',
       name: 'ImageDetail',
       component: ImageDetail
     },

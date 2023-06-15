@@ -15,7 +15,7 @@
 
     
 
-    <v-dialog v-model="dialog" max-width="500" @closed="resetDropArea">
+    <v-dialog v-model="dialog" max-width="500">
       <v-card>
         <v-card-title>이미지 업로드</v-card-title>
         <v-card-text>
@@ -45,11 +45,13 @@
 </template>
 
 <script>
-import axios from 'axios';
-
 export default {
   data() {
     return {
+      userId: '',
+      title: '',
+      uploadDate: '',
+      userPw: '',
       dialog: false,
       selectedFiles: [],
       uploadCompleted: false,
@@ -87,12 +89,11 @@ export default {
       this.selectedFiles.forEach(file => {
         formData.append('images', file);
       });
-      formData.append('userId', this.userId);
-      formData.append('userPw', this.userPw);
-      formData.append('title', this.title);
+      formData.append('userId', this.userId || 'undefined');
+      formData.append('userPw', this.userPw || 'undefined');
+      formData.append('title', this.title || 'undefined');
       formData.append('uploadDate', this.uploadDate);
-      axios
-        .post('http://localhost:8080/image', formData, {
+      this.$axios.post('/image', formData, {
           headers: {
             'Content-Type': 'multipart/form-data',
           },
