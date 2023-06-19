@@ -1,6 +1,7 @@
 package com.vazil.imageupload.controller;
 
-import com.vazil.imageupload.dto.ImageFile;
+import com.vazil.imageupload.model.FileType;
+import com.vazil.imageupload.model.ImageFile;
 
 import com.vazil.imageupload.service.AwsS3Service;
 import com.vazil.imageupload.service.ImageService;
@@ -43,129 +44,37 @@ public class ImageController {
 
     @PostMapping(value = "/image", consumes = "multipart/form-data")
     public Flux<String> insertImage(@RequestPart("images") Flux<FilePart> filePartFlux,
-                                    @RequestPart("userId") String userId,
-                                    @RequestPart("userPw") String userPw,
-                                    @RequestPart("title") String title,
-                                    @RequestPart("uploadDate") String uploadDate) {
+                                    @RequestPart("password") String password,
+                                    @RequestPart("title") String title) {
         log.info("***ImageController-insertImage***");
-        filePartFlux.count().subscribe(count -> log.info("전송된 파일 개수: " + count));
-        return filePartFlux.flatMapSequential(filePart -> {
-            if (filePart != null) {
-                return awsS3Service.upload(filePart)
-                        .flatMap(fileURL -> {
-                            String fileType = filePart.headers().getContentType().toString();
-                            ImageFile imageFile = ImageFile.builder()
-                                    .fileType(fileType)
-                                    .userId(userId)
-                                    .userPw(userPw)
-                                    .fileName(filePart.filename())
-                                    .title(title)
-                                    .uploadDate(uploadDate)
-                                    .fileURL(fileURL)
-                                    .build();
-                            ResponseEntity<Mono<ImageFile>> entity = ResponseEntity.ok(Mono.just(imageFile));
-                            return imageService.createImage(entity)
-                                    .thenReturn("업로드 성공");
-                        });
-            } else {
-                return Mono.error(new IllegalArgumentException("이미지 파일 없음"));
-            }
-        }).onErrorResume(e -> {
-            log.error("이미지 업로드 실패", e);
-            return Mono.just("이미지 업로드 실패: " + e.getMessage());
-        });
+        return imageService.createImage(filePartFlux, password, title);
     }
 
     @PatchMapping(value = "/image", consumes = "multipart/form-data")
     public Mono<ImageFile> updateImagePatch(@RequestPart("id") String id,
-                                            @RequestPart("userId") String userId,
-                                            @RequestPart("userPw") String userPw,
+                                            @RequestPart("password") String password,
                                             @RequestPart("title") String title,
                                             @RequestPart("fileName") String fileName,
                                             @RequestPart("fileURL") String fileURL,
-                                            @RequestPart("fileType") String fileType,
-                                            @RequestPart("uploadDate") String uploadDate) {
+                                            @RequestPart("fileType") FileType fileType) {
         log.info("***ImageController-updateImagePatch***");
-
-        return imageService.verifyUserPw(id, userPw).flatMap(ok -> {
-            if (ok) {
-                ImageFile imageFile = ImageFile.builder()
-                        .userId(userId)
-                        .title(title)
-                        .uploadDate(uploadDate)
-                        .fileName(fileName)
-                        .fileURL(fileURL)
-                        .fileType(fileType)
-                        .build();
-                return imageService.updateImageById(id, imageFile);
-            } else {
-                return Mono.error(new Exception("비밀번호가 일치하지 않습니다."));
-            }
-        }).onErrorResume(e -> {
-            log.error("이미지 업데이트 실패", e);
-            return Mono.error(new Exception("이미지 업데이트 실패: " + e.getMessage()));
-        });
+        return imageService.updateImagePatch(id, password, title, fileName, fileURL, fileType);
     }
 
     @PutMapping(value = "/image", consumes = "multipart/form-data")
     public Mono<ImageFile> updateImagePut(@RequestPart("id") String id,
                                           @RequestPart("image") Mono<FilePart> filePartMono,
-                                          @RequestPart("userId") String userId,
-                                          @RequestPart("userPw") String userPw,
-                                          @RequestPart("title") String title,
-                                          @RequestPart("uploadDate") String uploadDate) {
+                                          @RequestPart("password") String password,
+                                          @RequestPart("title") String title) {
         log.info("***ImageController-updateImagePut***");
-        return imageService.verifyUserPw(id, userPw).flatMap(ok -> {
-            if(ok) {
-                return filePartMono.flatMap(filePart -> {
-                    if(filePart != null) {
-                        return awsS3Service.upload(filePart)
-                                .flatMap(fileURL -> {
-                                    String fileType = filePart.headers().getContentType().toString();
-                                    ImageFile imageFile = ImageFile.builder()
-                                            .fileType(fileType)
-                                            .userId(userId)
-                                            .fileName(filePart.filename())
-                                            .title(title)
-                                            .uploadDate(uploadDate)
-                                            .fileURL(fileURL)
-                                            .build();
-                                    return imageService.updateImageById(id, imageFile);
-                                });
-                    } else {
-                        return Mono.error(new Exception("이미지 파일이 없습니다."));
-                    }
-                }).onErrorResume(e -> {
-                    log.error("이미지 업데이트 실패", e);
-                    return Mono.error(new Exception("이미지 업데이트 실패: " + e.getMessage()));
-                });
-            } else {
-                return Mono.error(new Exception("비밀번호가 일치하지 않습니다."));
-            }
-        }).onErrorResume(e -> {
-            log.error("이미지 업데이트 실패", e);
-            return Mono.error(new Exception("이미지 업데이트 실패: " + e.getMessage()));
-        });
+        return imageService.updateImagePut(id, filePartMono, password, title);
     }
 
     @DeleteMapping(value = "/image")
     public Mono<Void> deleteImage(@RequestBody Map<String, String> request) {
+        log.info("***ImageController-deleteImage***");
         String id = request.get("id");
         String userPw = request.get("userPw");
-
-        log.info("***ImageController-deleteImage***");
-        log.info("id: " + id);
-        log.info("userPw: " + userPw);
-
-        return imageService.verifyUserPw(id, userPw).flatMap(ok -> {
-            if(ok) {
-                return imageService.deleteImageById(id);
-            } else {
-                return Mono.error(new Exception("비밀번호가 일치하지 않습니다."));
-            }
-        }).onErrorResume(e -> {
-            log.error("이미지 삭제 실패", e);
-            return Mono.error(new Exception("이미지 삭제 실패: " + e.getMessage()));
-        });
+        return imageService.deleteImageById(id, userPw);
     }
 }

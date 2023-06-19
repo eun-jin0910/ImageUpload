@@ -7,7 +7,6 @@
           <col width="11%" />
           <col width="16%" />
           <col width="4%" />
-          <col width="7%" />
           <col width="10%" />
           <col width="2%" />
           <col width="2%" />
@@ -18,7 +17,6 @@
             <th>제목</th>
             <th>파일명</th>
             <th>파일종류</th>
-            <th>아이디</th>
             <th>등록일자</th>
             <th>저장</th>
             <th>삭제</th>
@@ -39,8 +37,7 @@
               </td>
               <td>{{ image.fileName }}</td>
               <td class="text-center">{{ image.fileType }}</td>
-              <td class="text-center">{{ image.userId }}</td>
-              <td class="text-center">{{ image.uploadDate }}</td>
+              <td class="text-center">{{ formatDate(image.uploadDate) }}</td>
               <td class="text-center">
                   <v-icon class="blue--text" @click="downloadImage(image.fileURL)">
                       mdi-download
@@ -63,6 +60,7 @@
 
 <script>
 import DeleteModal from '../components/DeleteModal.vue';
+import moment from 'moment';
 
 export default {
   components: { DeleteModal },
@@ -111,6 +109,9 @@ export default {
       .catch(error => {
         console.error(error);
       });
+    },
+    formatDate(date) {
+      return moment(date).format('YYYY. M. D. A hh:mm:ss');
     },
     openModal(image) {
       this.selectedImage = image;

@@ -3,10 +3,8 @@
     <v-card-title>이미지 수정</v-card-title>
     <v-card-text>
       <v-form ref="form">
-        <v-text-field v-model="userId" label="사용자 아이디"></v-text-field>
         <v-text-field v-model="title" label="제목"></v-text-field>
-        <v-text-field v-model="uploadDate" label="수정일" readonly></v-text-field>
-        <v-text-field v-model="userPw" label="비밀번호"></v-text-field>
+        <v-text-field v-model="password" label="비밀번호"></v-text-field>
         <div class="file-input-container">
           <input type="file" @change="handleFileSelect" ref="fileInput" style="display: none;">
           <v-btn class="file-button" color="primary" @click="$refs.fileInput.click()" :disabled="selectedFiles.length > 0">파일 선택</v-btn>
@@ -37,16 +35,14 @@ export default {
   },
   data() {
     return {
-      userId: '',
       title: '',
       uploadDate: '',
-      userPw: '',
+      password: '',
       selectedFiles: [],
     };
   },
   created() {
     this.uploadDate = new Date().toLocaleString();
-    this.userId = this.image.userId;
     this.title = this.image.title;
     this.selectedFiles = [{ name: this.image.fileURL }]; 
   },
@@ -59,10 +55,8 @@ export default {
       console.log('selectedFile', selectedFile);
       const formData = new FormData();
       formData.append('id', this.image.id);
-      formData.append('userId', this.userId || 'undefined');
-      formData.append('userPw', this.userPw || 'undefined');
+      formData.append('password', this.password || 'undefined');
       formData.append('title', this.title || 'undefined');
-      formData.append('uploadDate', this.uploadDate);
       if (selectedFile.name != this.image.fileURL) {
         console.log(this.image.fileURL);
         formData.append('image', selectedFile);

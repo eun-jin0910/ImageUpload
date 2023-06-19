@@ -2,7 +2,7 @@
   <v-container class="upload-container">
     <div class="drop-area" @drop.prevent="handleFileDrop" @dragover.prevent>
       <p v-if="selectedFiles.length === 0" class="drag-text">
-        <v-icon x-large class="custom-icon upload-icon large-icon">mdi-cloud-upload</v-icon><br>
+        <v-icon x-large class="custom-icon upload-icon large-icon" id="upload-icon">mdi-cloud-upload</v-icon><br>
         여기에 파일을 드래그하세요</p>
       <div v-else>
         <div v-for="(file, index) in selectedFiles" :key="index" class="file-item">
@@ -13,16 +13,12 @@
       <v-btn class="upload-button" color="primary" @click="openDialog">이미지 업로드</v-btn>
     </div>
 
-    
-
-    <v-dialog v-model="dialog" max-width="500">
+    <v-dialog v-model="dialog" max-width="400">
       <v-card>
         <v-card-title>이미지 업로드</v-card-title>
         <v-card-text>
-          <v-text-field v-model="userId" label="사용자 아이디"></v-text-field>
-          <v-text-field v-model="userPw" label="비밀번호"></v-text-field>
           <v-text-field v-model="title" label="제목"></v-text-field>
-          <v-text-field v-model="uploadDate" label="등록일" readonly></v-text-field>
+          <v-text-field v-model="password" label="비밀번호"></v-text-field>
           <div class="file-input-container">
             <input type="file" @change="handleFileSelect" ref="fileInput" style="display: none;" multiple>
             <v-btn class="file-button" color="primary" @click="$refs.fileInput.click()">파일 선택</v-btn>
@@ -48,10 +44,9 @@
 export default {
   data() {
     return {
-      userId: '',
       title: '',
       uploadDate: '',
-      userPw: '',
+      password: '',
       dialog: false,
       selectedFiles: [],
       uploadCompleted: false,
@@ -89,10 +84,9 @@ export default {
       this.selectedFiles.forEach(file => {
         formData.append('images', file);
       });
-      formData.append('userId', this.userId || 'undefined');
-      formData.append('userPw', this.userPw || 'undefined');
+
+      formData.append('password', this.password || 'undefined');
       formData.append('title', this.title || 'undefined');
-      formData.append('uploadDate', this.uploadDate);
       this.$axios.post('/image', formData, {
           headers: {
             'Content-Type': 'multipart/form-data',
@@ -100,7 +94,7 @@ export default {
         })
         .then(response => {
           console.log(response);
-          window.location.reload(); 
+          window.location.reload();
         })
         .catch(error => {
           console.error(error);

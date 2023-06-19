@@ -38,7 +38,7 @@
       deleteImage() {
         const requestData = {
           id: this.image.id,
-          userPw: this.password || "undefined",
+          password: this.password || "undefined",
         };
         console.log("ID : " + this.image.id);
         console.log("PW : " + this.password);

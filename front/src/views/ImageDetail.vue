@@ -14,12 +14,8 @@
                 <td>{{ image.fileName }}</td>
               </tr>
               <tr>
-                <td><strong>아이디</strong></td>
-                <td>{{ image.userId }}</td>
-              </tr>
-              <tr>
                 <td><strong>등록일자</strong></td>
-                <td>{{ image.uploadDate }}</td>
+                <td>{{ formatDate(image.uploadDate) }}</td>
               </tr>
               <tr>
                 <td><strong>파일종류</strong></td>
@@ -46,6 +42,7 @@
 
 <script>
 import EditModal from '../components/EditModal.vue';
+import moment from 'moment';
 
 export default {
   components: { EditModal },
@@ -70,6 +67,9 @@ export default {
       .catch(error => {
         console.log(error)
       })
+    },
+    formatDate(date) {
+      return moment(date).format('YYYY. M. D. A hh:mm:ss');
     },
     goBack() {
       this.$router.go(-1);

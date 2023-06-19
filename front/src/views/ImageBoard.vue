@@ -13,11 +13,10 @@
     <v-dialog v-model="modalOpen" max-width="500">
       <v-img :src="selectedImage.fileURL" :alt="selectedImage.fileName" class="modal-image" />
       <v-card>
-        <v-card-title>{{ selectedImage.title }}</v-card-title>
+        <v-card-title>{{ selectedImage.title }}</v-card-title><br>
         <v-card-text>
-          <p><strong>파일명:</strong> {{ selectedImage.fileName }}</p>
-          <p><strong>아이디:</strong> {{ selectedImage.userId }}</p>
-          <p><strong>등록일자:</strong> {{ selectedImage.uploadDate }}</p>
+          <p><strong>파일명 : </strong> {{ selectedImage.fileName }}</p>
+          <p><strong>등록일자 : </strong> {{ selectedImage.uploadDate }}</p>
         </v-card-text>
       </v-card>
       <v-card-actions class="modal-actions">
