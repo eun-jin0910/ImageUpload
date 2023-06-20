@@ -4,8 +4,8 @@
       <table>
         <colgroup>
           <col width="2%" />
-          <col width="11%" />
-          <col width="16%" />
+          <col width="10%" />
+          <col width="18%" />
           <col width="4%" />
           <col width="10%" />
           <col width="2%" />
@@ -53,7 +53,7 @@
       </table>
     </div>
     <v-dialog v-model="modalOpen" max-width="400">
-      <delete-modal :image="selectedImage" @close="closeModal" />
+      <delete-modal :image="selectedImage" @close="closeModal" @delete="deleteImage"/>
     </v-dialog>
   </v-container>
 </template>
@@ -95,7 +95,6 @@ export default {
     downloadImage(fileURL) {
       this.$axios.get(fileURL, { responseType: 'blob' }) 
       .then(response => {
-        console.log('fileURL', fileURL);
         const blob = response.data;
         const url = URL.createObjectURL(blob); // Blob 객체 URL 생성
         const link = document.createElement('a');
@@ -117,14 +116,13 @@ export default {
       this.selectedImage = image;
       this.modalOpen = true;
     },
-    deleteImage() {
-      const fileURL = this.selectedImage.fileURL;
-      console.log('Deleting image:', fileURL);
+    deleteImage(id) {
+      this.images = this.images.filter(e => e.id !== id)
       this.closeModal();
     },
     closeModal() {
       this.modalOpen = false;
-    }
+    },
   },
 };
 </script>
@@ -140,4 +138,5 @@ th {
 thead {
   background-color: #f7f7f7;
 }
+
 </style>

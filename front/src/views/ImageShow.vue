@@ -11,6 +11,7 @@
               <v-icon size="24">mdi-view-list</v-icon>
             </v-btn>
           </v-btn-toggle>
+          <v-btn class="delete-button" color="primary" @click="deleteAll" >전체삭제</v-btn>
         </v-col>
       </v-row>
     </v-container>
@@ -31,6 +32,19 @@ export default {
     return {
       activeButton: 'image-board'
     };
+  },
+  methods: {
+    deleteAll() {
+      this.$axios.delete('/images')
+      .then(response => {
+        console.log(response);
+        this.images = [];
+        this.$emit('deleteAll');
+      })
+      .catch(error => {
+        console.log(error);
+      })
+    }
   }
 };
 </script>

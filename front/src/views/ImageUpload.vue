@@ -7,7 +7,7 @@
       <div v-else>
         <div v-for="(file, index) in selectedFiles" :key="index" class="file-item">
           <span class="file-name">{{ file.name }}</span>
-          <span class="delete-file" @click="removeFile(index)">x</span>
+          <span class="delete-file" @click="removeFile(index)">x</span><br/>
         </div>
       </div>
       <v-btn class="upload-button" color="primary" @click="openDialog">이미지 업로드</v-btn>
@@ -20,12 +20,12 @@
           <v-text-field v-model="title" label="제목"></v-text-field>
           <v-text-field v-model="password" label="비밀번호"></v-text-field>
           <div class="file-input-container">
-            <input type="file" @change="handleFileSelect" ref="fileInput" style="display: none;" multiple>
+            <input type="file" @change="handleFileSelect" ref="fileInput" style="display: none;" accept="image/*" multiple>
             <v-btn class="file-button" color="primary" @click="$refs.fileInput.click()">파일 선택</v-btn>
             <div v-if="selectedFiles.length > 0">
               <div v-for="(file, index) in selectedFiles" :key="index" class="file-item">
                 <span class="file-name">{{ file.name }}</span>
-                <span class="delete-file" @click="removeFile(index)">x</span>
+                <span class="delete-file" @click="removeFile(index)">x</span><br/>
               </div>
             </div>
           </div>
@@ -79,28 +79,56 @@ export default {
     removeFile(index) {
       this.selectedFiles.splice(index, 1);
     },
-    uploadImage() {
-      const formData = new FormData();
-      this.selectedFiles.forEach(file => {
-        formData.append('images', file);
-      });
 
-      formData.append('password', this.password || 'undefined');
-      formData.append('title', this.title || 'undefined');
-      this.$axios.post('/image', formData, {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-          },
-        })
-        .then(response => {
-          console.log(response);
-          window.location.reload();
-        })
-        .catch(error => {
-          console.error(error);
-        });
-        this.selectedFiles = [];
-        this.dialog = false;
+    checkSize(tempImages) {
+      let totalSize = 0;
+      for (const file of tempImages) {
+        totalSize += file.size;
+      }
+      return totalSize;
+    },
+    axiosImage(tempImages) {
+      const formData = new FormData();
+          formData.append('password', this.password || 'undefined');
+          formData.append('title', this.title || 'undefined');
+          tempImages.forEach(file => {
+            formData.append('images', file);
+          })
+          this.$axios.post('/image', formData, {
+              headers: {
+                'Content-Type': 'multipart/form-data',
+              },
+            })
+            .then(response => {
+              console.log(response);
+              tempImages = [];
+              window.location.reload();
+            })
+            .catch(error => {
+              console.error(error);
+            });
+            // this.selectedFiles = [];
+            this.dialog = false;
+    },
+    uploadImage() {
+      let tempImages = [];
+      const uploadSize = 100000000
+      const maxSize = 150000000;
+    
+      this.selectedFiles.forEach(file => {
+        console.log(tempImages);
+        const size = this.checkSize(tempImages);
+        if(size <= uploadSize) {
+          console.log("파일 계속 추가중");
+          tempImages.push(file);
+        } else if(size <= maxSize) {
+          console.log("사이즈" + size);
+          console.log("여기서 이미지 formdata에 넣고 axios 할거임");
+          this.axiosImage(this.tempImages);
+        } else {
+          console.log("파일 용량 초과로 업로드 실패");
+        }
+      });
     },    
   },
   created() {

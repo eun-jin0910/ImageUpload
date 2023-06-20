@@ -1,12 +1,13 @@
 package com.vazil.imageupload.service;
 
+import com.vazil.imageupload.dto.ImageRequestDTO;
+import com.vazil.imageupload.dto.ImageResponseDTO;
 import com.vazil.imageupload.model.FileType;
 import com.vazil.imageupload.model.ImageFile;
 import com.vazil.imageupload.repository.ImageRepository;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
-import org.springframework.http.codec.multipart.FilePart;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Flux;
@@ -28,14 +29,16 @@ public class ImageService {
         this.imageRepository = imageRepository;
     }
 
-    public Mono<ImageFile> getImageById(String id) {
+    public Mono<ImageResponseDTO> getImageById(String id) {
         log.info("***ImageService-getImageById***");
-        return imageRepository.findById(id);
+        return imageRepository.findById(id)
+                .map(imageFile -> new ImageResponseDTO(id, imageFile.getTitle(), imageFile.getFileName(), imageFile.getFileURL(), imageFile.getFileType(), imageFile.getUploadDate()));
     }
 
-    public Flux<ImageFile> getAllImages() {
+    public Flux<ImageResponseDTO> getAllImages() {
         log.info("***ImageService-getAllImages***");
-        return imageRepository.findAll(Sort.by(Sort.Direction.DESC, "uploadDate"));
+        return imageRepository.findAll(Sort.by(Sort.Direction.DESC, "uploadDate"))
+                .map(imageFile -> new ImageResponseDTO(imageFile.getId(), imageFile.getTitle(), imageFile.getFileName(), imageFile.getFileURL(), imageFile.getFileType(), imageFile.getUploadDate()));
     }
 
     public Mono<Boolean> verifyUserPw(String id, String password) {
@@ -45,33 +48,71 @@ public class ImageService {
     }
 
     @Transactional
-    public Flux<String> createImage(Flux<FilePart> filePartFlux, String password, String title) {
+    public Mono<String> createImage(Mono<ImageRequestDTO> imageRequestDTOMono) {
         log.info("***ImageService-createImage***");
         LocalDateTime now = LocalDateTime.now();
-        filePartFlux.count().subscribe(count -> log.info("전송된 파일 개수: " + count));
-        return filePartFlux.switchIfEmpty(Mono.error(new IllegalArgumentException("이미지 파일 없음")))
-                .flatMapSequential(filePart -> awsS3Service.upload(filePart)
-                        .flatMap(fileURL -> {
-                            FileType fileType = FileType.fromImageType(filePart.headers().getContentType().toString());
-                            ImageFile imageFile = ImageFile.builder()
-                                    .fileType(fileType)
-                                    .password(password)
-                                    .fileName(filePart.filename())
-                                    .title(title)
-                                    .uploadDate(now)
-                                    .fileURL(fileURL)
-                                    .build();
-                            return imageRepository.save(imageFile);
-                        }))
-                .onErrorResume(e -> {
-                    log.error("이미지 업로드 실패", e);
-                    return Mono.error(new RuntimeException("이미지 업로드 실패: " + e.getMessage()));
-                })
-                .map(imageFile -> "업로드 성공");
+        return imageRequestDTOMono.flatMap(imageRequestDTO -> {
+            return awsS3Service.upload(imageRequestDTO.getImage())
+                    .flatMap(fileURL -> {
+                        FileType fileType = FileType.fromImageType(imageRequestDTO.getImage().headers().getContentType().toString());
+                        ImageFile imageFile = ImageFile.builder()
+                                .fileType(fileType)
+                                .password(imageRequestDTO.getPassword())
+                                .fileName(imageRequestDTO.getImage().filename())
+                                .title(imageRequestDTO.getTitle())
+                                .uploadDate(now)
+                                .fileURL(fileURL)
+                                .build();
+                        return imageRepository.save(imageFile);
+                    })
+                    .onErrorResume(e -> {
+                        log.error("이미지 업로드 실패", e);
+                        return Mono.error(new RuntimeException("이미지 업로드 실패: " + e.getMessage()));
+                    })
+                    .map(imageFile -> "업로드 성공");
+        });
     }
 
     @Transactional
-    public Mono<ImageFile> updateImagePatch(String id, String password, String title, String fileName, String fileURL, FileType fileType) {
+    public Mono<String> updateImagePut(String id, Mono<ImageRequestDTO> imageRequestDTOMono) {
+        log.info("***ImageService-updateImage***");
+        LocalDateTime now = LocalDateTime.now();
+        return imageRequestDTOMono.flatMap(imageRequestDTO -> {
+            return verifyUserPw(id, imageRequestDTO.getPassword())
+                    .flatMap(ok -> {
+                        if (ok) {
+                            if (imageRequestDTO.getImage() != null) {
+                                return awsS3Service.upload(imageRequestDTO.getImage())
+                                        .flatMap(fileURL -> {
+                                            FileType fileType = FileType.fromImageType(imageRequestDTO.getImage().headers().getContentType().toString());
+                                            return imageRepository.findById(id)
+                                                    .flatMap(image -> {
+                                                        image.setFileName(imageRequestDTO.getImage().filename());
+                                                        image.setTitle(imageRequestDTO.getTitle());
+                                                        image.setUploadDate(now);
+                                                        image.setFileURL(fileURL);
+                                                        image.setFileType(fileType);
+                                                        return imageRepository.save(image)
+                                                                .map(updatedImage -> "이미지 업데이트 성공");
+                                                    });
+                                        });
+                            } else {
+                                return Mono.error(new Exception("이미지 파일이 없습니다."));
+                            }
+
+                        } else {
+                            return Mono.error(new Exception("비밀번호가 일치하지 않습니다."));
+                        }
+                    })
+                    .onErrorResume(e -> {
+                        log.error("이미지 업데이트 실패", e);
+                        return Mono.error(new Exception("이미지 업데이트 실패: " + e.getMessage()));
+                    });
+        });
+    }
+
+    @Transactional
+    public Mono<String> updateImagePatch(String id, String password, String title) {
         log.info("***ImageService-updateImageById***");
         LocalDateTime now = LocalDateTime.now();
         return verifyUserPw(id, password)
@@ -79,12 +120,10 @@ public class ImageService {
                     if (ok) {
                         return imageRepository.findById(id)
                                 .flatMap(image -> {
-                                    image.setFileName(fileName);
                                     image.setUploadDate(now);
                                     image.setTitle(title);
-                                    image.setFileURL(fileURL);
-                                    image.setFileType(fileType);
-                                    return imageRepository.save(image);
+                                    return imageRepository.save(image)
+                                            .map(updatedImage -> "이미지 업데이트 성공");
                                 });
                     } else {
                         return Mono.error(new Exception("비밀번호가 일치하지 않습니다."));
@@ -96,41 +135,6 @@ public class ImageService {
                 });
     }
 
-    @Transactional
-    public Mono<ImageFile> updateImagePut(String id, Mono<FilePart> filePartMono, String password, String title) {
-        log.info("***ImageService-updateImage***");
-        LocalDateTime now = LocalDateTime.now();
-        return verifyUserPw(id, password)
-                .flatMap(ok -> {
-                    if (ok) {
-                        return filePartMono.flatMap(filePart -> {
-                            if (filePart != null) {
-                                return awsS3Service.upload(filePart)
-                                        .flatMap(fileURL -> {
-                                            FileType fileType = FileType.fromImageType(filePart.headers().getContentType().toString());
-                                            return imageRepository.findById(id)
-                                                    .flatMap(image -> {
-                                                        image.setFileName(filePart.filename());
-                                                        image.setUploadDate(now);
-                                                        image.setTitle(title);
-                                                        image.setFileURL(fileURL);
-                                                        image.setFileType(fileType);
-                                                        return imageRepository.save(image);
-                                                    });
-                                        });
-                            } else {
-                                return Mono.error(new Exception("이미지 파일이 없습니다."));
-                            }
-                        });
-                    } else {
-                        return Mono.error(new Exception("비밀번호가 일치하지 않습니다."));
-                    }
-                })
-                .onErrorResume(e -> {
-                    log.error("이미지 업데이트 실패", e);
-                    return Mono.error(new Exception("이미지 업데이트 실패: " + e.getMessage()));
-                });
-    }
 
     @Transactional
     public Mono<Void> deleteImageById(String id, String password) {
@@ -145,5 +149,11 @@ public class ImageService {
             log.error("이미지 삭제 실패", e);
             return Mono.error(new Exception("이미지 삭제 실패: " + e.getMessage()));
         });
+    }
+
+    @Transactional
+    public Mono<Void> deleteAllImages() {
+        log.info("***ImageService-deleteAllImages***");
+        return imageRepository.deleteAll().then();
     }
 }

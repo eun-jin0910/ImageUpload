@@ -70,9 +70,6 @@ export default {
           console.log(error);
         });
       } else {
-        formData.append('fileURL', this.image.fileURL);
-        formData.append('fileType', this.image.fileType);
-        formData.append('fileName', this.image.fileName);
         this.$axios.patch('/image', formData)
         .then(response => {
           console.log(response);
