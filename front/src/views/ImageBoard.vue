@@ -67,7 +67,6 @@ export default {
     downloadImage(fileURL) {
       this.$axios.get(fileURL, { responseType: 'blob' }) 
       .then(response => {
-        console.log('fileURL', fileURL);
         const blob = response.data;
         const url = URL.createObjectURL(blob);
         const link = document.createElement('a');

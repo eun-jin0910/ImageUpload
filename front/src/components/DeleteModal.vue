@@ -50,7 +50,6 @@
           })
           .then(response => {
               console.log(response);
-              // window.location.reload();
               this.$emit('delete', this.image.id);
               this.closeModal();
               })

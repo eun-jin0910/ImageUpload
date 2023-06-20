@@ -23,7 +23,7 @@
           </tr>
         </thead>
         <tbody>
-          <tr v-for="image in sortedImages" :key="image.fileURL">
+          <tr v-for="image in paginatedImages" :key="image.fileURL">
               <td class="text-center">{{ image.no }}</td>
               <td>
                   <div class="image-title">
@@ -55,6 +55,7 @@
     <v-dialog v-model="modalOpen" max-width="400">
       <delete-modal :image="selectedImage" @close="closeModal" @delete="deleteImage"/>
     </v-dialog>
+    <v-pagination v-model="currentPage" :total-visible="5" :length="totalPages" @input="changePage" class="pagination"/>
   </v-container>
 </template>
 
@@ -68,7 +69,9 @@ export default {
     return {
       images: [],
       modalOpen: false,
-      selectedImage: null
+      selectedImage: null,
+      currentPage: 1,
+      pageSize: 10
     };
   },
   created() {
@@ -81,6 +84,14 @@ export default {
         return image;
       });
     },
+    paginatedImages() {
+      const startIndex = (this.currentPage - 1) * this.pageSize;
+      const endIndex = startIndex + this.pageSize;
+      return this.sortedImages.slice(startIndex, endIndex);
+    },
+    totalPages() {
+      return Math.ceil(this.sortedImages.length / this.pageSize);
+    }
   },
   methods: {
     fetchImages() {
@@ -123,6 +134,9 @@ export default {
     closeModal() {
       this.modalOpen = false;
     },
+    changePage(page) {
+      this.currentPage = page;
+    }
   },
 };
 </script>
@@ -137,6 +151,9 @@ th {
 }
 thead {
   background-color: #f7f7f7;
+}
+.pagination {
+  margin-top: 10px;
 }
 
 </style>

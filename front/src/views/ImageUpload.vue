@@ -50,6 +50,7 @@ export default {
       dialog: false,
       selectedFiles: [],
       uploadCompleted: false,
+      tempImages: [],
     };
   },
   computed: {
@@ -87,46 +88,48 @@ export default {
       }
       return totalSize;
     },
-    axiosImage(tempImages) {
+    axiosImage() {
       const formData = new FormData();
           formData.append('password', this.password || 'undefined');
           formData.append('title', this.title || 'undefined');
-          tempImages.forEach(file => {
+          this.tempImages.forEach(file => {
             formData.append('images', file);
           })
           this.$axios.post('/image', formData, {
               headers: {
                 'Content-Type': 'multipart/form-data',
               },
+              timeout: 5000,
             })
             .then(response => {
               console.log(response);
-              tempImages = [];
-              window.location.reload();
             })
             .catch(error => {
               console.error(error);
-            });
-            // this.selectedFiles = [];
-            this.dialog = false;
+            })
+            .finally(() => {
+              this.tempImages = [];
+              this.dialog = false;
+              window.location.reload();
+            }); 
     },
     uploadImage() {
-      let tempImages = [];
-      const uploadSize = 100000000
-      const maxSize = 150000000;
-    
-      this.selectedFiles.forEach(file => {
-        console.log(tempImages);
-        const size = this.checkSize(tempImages);
-        if(size <= uploadSize) {
-          console.log("파일 계속 추가중");
-          tempImages.push(file);
-        } else if(size <= maxSize) {
-          console.log("사이즈" + size);
-          console.log("여기서 이미지 formdata에 넣고 axios 할거임");
-          this.axiosImage(this.tempImages);
+      const maxSize = 100000000;
+      this.selectedFiles.forEach((file, index) => {
+        console.log('tempImages', this.tempImages);
+        const size = this.checkSize(this.tempImages);
+        console.log('tempImagesSize : ' + size);
+        if(size <= maxSize) {
+          this.tempImages.push(file);
+          if (index === this.selectedFiles.length - 1) {
+            console.log(index + "번째 파일 업로드")
+            console.log("마지막 파일 처리");
+            this.axiosImage(this.tempImages);
+          }
         } else {
-          console.log("파일 용량 초과로 업로드 실패");
+          this.axiosImage(this.tempImages);
+          console.log(index + "번째 파일 업로드")
+          console.log("tempImages 업로드 및 초기화");
         }
       });
     },    
