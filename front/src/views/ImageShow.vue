@@ -40,8 +40,7 @@ export default {
       this.$axios.delete('/images')
       .then(response => {
         console.log(response);
-        this.$emit('deleteAll');
-        window.location.reload();
+        this.$EventBus.$emit('deleteAll');
       })
       .catch(error => {
         console.log(error);

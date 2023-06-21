@@ -83,7 +83,6 @@ export default {
     },
     closeModal() {
       this.modalOpen = false;
-      window.location.reload();
     }
   }
 };

@@ -11,18 +11,13 @@ import ImageUpload from './ImageUpload';
 import ImageList from './ImageList.vue';
 import ImageBoard from './ImageBoard.vue';
 
-  export default {
-    components: {
-      ImageUpload,
-      ImageList,
-      ImageBoard,
+export default {
+  components: {
+    ImageUpload,
+    ImageList,
+    ImageBoard,
   },
-    data () {
-      return {
-        dialog: false,
-      }
-    },
-  }
+}
 </script>
 
 <style>

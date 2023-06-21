@@ -51,6 +51,7 @@
           .then(response => {
               console.log(response);
               this.$emit('delete', this.image.id);
+              this.$EventBus.$emit('delete');
               this.closeModal();
               })
           .catch(error => {

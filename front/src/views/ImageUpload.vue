@@ -1,18 +1,11 @@
 <template>
   <v-container class="upload-container">
     <div class="drop-area" @drop.prevent="handleFileDrop" @dragover.prevent>
-      <p v-if="selectedFiles.length === 0" class="drag-text">
+      <p class="drag-text">
         <v-icon x-large class="custom-icon upload-icon large-icon" id="upload-icon">mdi-cloud-upload</v-icon><br>
         여기에 파일을 드래그하세요</p>
-      <div v-else>
-        <div v-for="(file, index) in selectedFiles" :key="index" class="file-item">
-          <span class="file-name">{{ file.name }}</span>
-          <span class="delete-file" @click="removeFile(index)">x</span><br/>
-        </div>
-      </div>
       <v-btn class="upload-button" color="primary" @click="openDialog">이미지 업로드</v-btn>
     </div>
-
     <v-dialog v-model="dialog" max-width="400">
       <v-card>
         <v-card-title>이미지 업로드</v-card-title>
@@ -23,16 +16,18 @@
             <input type="file" @change="handleFileSelect" ref="fileInput" style="display: none;" accept="image/*" multiple>
             <v-btn class="file-button" color="primary" @click="$refs.fileInput.click()">파일 선택</v-btn>
             <div v-if="selectedFiles.length > 0">
-              <div v-for="(file, index) in selectedFiles" :key="index" class="file-item">
-                <span class="file-name">{{ file.name }}</span>
-                <span class="delete-file" @click="removeFile(index)">x</span><br/>
+              <div v-for="(file, index) in selectedFiles" :key="index">
+                <div class="file-item">
+                  <span class="file-name">{{ file.name }}</span>
+                  <span class="delete-file" @click="removeFile(index)">x</span>
+               </div>
               </div>
             </div>
           </div>
         </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
-          <v-btn color="blue darken-1" text @click="dialog = false">취소</v-btn>
+          <v-btn color="blue darken-1" text @click="closeDialog">취소</v-btn>
           <v-btn color="blue darken-1" text @click="uploadImage" :disabled="isUploadDisabled">업로드</v-btn>
         </v-card-actions>
       </v-card>
@@ -45,12 +40,10 @@ export default {
   data() {
     return {
       title: '',
-      uploadDate: '',
       password: '',
       dialog: false,
       selectedFiles: [],
       uploadCompleted: false,
-      tempImages: [],
     };
   },
   computed: {
@@ -63,9 +56,10 @@ export default {
   methods: {
     openDialog() {
       this.dialog = true;
-      this.$nextTick(() => {
-        this.$refs.fileInput.value = '';
-      });
+    },
+    closeDialog() {
+      this.selectedFiles = [];
+      this.dialog = false;
     },
     handleFileSelect(event) {
       this.selectedFiles = Array.from(event.target.files);
@@ -80,62 +74,37 @@ export default {
     removeFile(index) {
       this.selectedFiles.splice(index, 1);
     },
-
-    checkSize(tempImages) {
-      let totalSize = 0;
-      for (const file of tempImages) {
-        totalSize += file.size;
-      }
-      return totalSize;
-    },
-    axiosImage() {
-      const formData = new FormData();
-          formData.append('password', this.password || 'undefined');
-          formData.append('title', this.title || 'undefined');
-          this.tempImages.forEach(file => {
-            formData.append('images', file);
-          })
-          this.$axios.post('/image', formData, {
-              headers: {
-                'Content-Type': 'multipart/form-data',
-              },
-              timeout: 5000,
-            })
-            .then(response => {
-              console.log(response);
-            })
-            .catch(error => {
-              console.error(error);
-            })
-            .finally(() => {
-              this.tempImages = [];
-              this.dialog = false;
-              window.location.reload();
-            }); 
-    },
     uploadImage() {
-      const maxSize = 100000000;
-      this.selectedFiles.forEach((file, index) => {
-        console.log('tempImages', this.tempImages);
-        const size = this.checkSize(this.tempImages);
-        console.log('tempImagesSize : ' + size);
-        if(size <= maxSize) {
-          this.tempImages.push(file);
-          if (index === this.selectedFiles.length - 1) {
-            console.log(index + "번째 파일 업로드")
-            console.log("마지막 파일 처리");
-            this.axiosImage(this.tempImages);
-          }
-        } else {
-          this.axiosImage(this.tempImages);
-          console.log(index + "번째 파일 업로드")
-          console.log("tempImages 업로드 및 초기화");
-        }
+      const startTime = performance.now();
+      console.log("업로드 시작");
+      const uploadPromises = this.selectedFiles.map(file => {
+        console.log("단일 이미지 파일 업로드 시작");
+        const formData = new FormData();
+        formData.append('images', file);
+        formData.append('password', this.password || 'undefined');
+        formData.append('title', this.title || 'undefined');
+        return this.$axios.post('/image', formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        });
       });
-    },    
-  },
-  created() {
-    this.uploadDate = new Date().toLocaleString();
+      Promise.all(uploadPromises)
+        .then(responses => {
+          console.log(responses); 
+        })
+        .catch(error => {
+          console.error(error);
+        })
+        .finally(() => {
+          console.log("모든 업로드 완료");
+          const uploadTime = (performance.now() - startTime) / 1000;
+          console.log(`작업 수행 시간: ${uploadTime}초`);
+          this.$EventBus.$emit('upload');
+          this.selectedFiles = [];
+          this.dialog = false;
+        });
+      },
   },
 };
 </script>
@@ -154,6 +123,7 @@ export default {
   display: none;
 }
 .file-item {
+  margin-left: 3px;
   display: flex;
   align-items: center;
 }

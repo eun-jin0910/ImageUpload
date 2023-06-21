@@ -6,6 +6,7 @@ import router from './router'
 
 Vue.config.productionTip = false
 Vue.use(axios);
+Vue.prototype.$EventBus = new Vue();
 
 new Vue({
   vuetify,

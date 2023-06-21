@@ -7,7 +7,7 @@
           <col width="10%" />
           <col width="18%" />
           <col width="4%" />
-          <col width="10%" />
+          <col width="12%" />
           <col width="2%" />
           <col width="2%" />
         </colgroup>
@@ -55,7 +55,7 @@
     <v-dialog v-model="modalOpen" max-width="400">
       <delete-modal :image="selectedImage" @close="closeModal" @delete="deleteImage"/>
     </v-dialog>
-    <v-pagination v-model="currentPage" :total-visible="5" :length="totalPages" @input="changePage" class="pagination"/>
+    <v-pagination v-model="currentPage" :total-visible="7" :length="totalPages" @input="changePage" class="pagination"/>
   </v-container>
 </template>
 
@@ -71,11 +71,13 @@ export default {
       modalOpen: false,
       selectedImage: null,
       currentPage: 1,
-      pageSize: 10
+      pageSize: 20
     };
   },
   created() {
     this.fetchImages();
+    this.$EventBus.$on('deleteAll', this.handleDeleteAll);
+    this.$EventBus.$on('upload', this.fetchImages);
   },
   computed: {
     sortedImages() {
@@ -94,6 +96,9 @@ export default {
     }
   },
   methods: {
+    handleDeleteAll() {
+      this.images = [];
+    },
     fetchImages() {
       this.$axios.get('/images')
       .then(response => {
@@ -153,7 +158,7 @@ thead {
   background-color: #f7f7f7;
 }
 .pagination {
-  margin-top: 10px;
+  padding-top: 5px;
 }
 
 </style>
