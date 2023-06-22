@@ -74,37 +74,122 @@ export default {
     removeFile(index) {
       this.selectedFiles.splice(index, 1);
     },
-    uploadImage() {
-      const startTime = performance.now();
-      console.log("업로드 시작");
-      const uploadPromises = this.selectedFiles.map(file => {
-        console.log("단일 이미지 파일 업로드 시작");
-        const formData = new FormData();
-        formData.append('images', file);
-        formData.append('password', this.password || 'undefined');
-        formData.append('title', this.title || 'undefined');
-        return this.$axios.post('/image', formData, {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-          },
-        });
+    // uploadImage() {
+    //   const startTime = performance.now();
+    //   console.log("업로드 시작");
+    //   const uploadPromises = this.selectedFiles.map(file => {
+    //     console.log("단일 이미지 파일 업로드 시작");
+    //     const formData = new FormData();
+    //     formData.append('images', file);
+    //     formData.append('password', this.password || 'undefined');
+    //     formData.append('title', this.title || 'undefined');
+    //     return this.$axios.post('/image', formData, {
+    //       headers: {
+    //         'Content-Type': 'multipart/form-data',
+    //       },
+    //     });
+    //   });
+    //   Promise.all(uploadPromises)
+    //     .then(responses => {
+    //       console.log(responses); 
+    //     })
+    //     .catch(error => {
+    //       console.error(error);
+    //     })
+    //     .finally(() => {
+    //       console.log("모든 업로드 완료");
+    //       const uploadTime = (performance.now() - startTime) / 1000;
+    //       console.log(`작업 수행 시간: ${uploadTime}초`);
+    //       this.$EventBus.$emit('upload');
+    //       this.selectedFiles = [];
+    //       this.dialog = false;
+    //     });
+    // },
+
+
+
+
+    
+  uploadImage() {
+    const CHUNK_SIZE = 1024 * 1024; // 1MB 청크 사이즈
+    const startTime = performance.now();
+    console.log("업로드 시작");
+    
+    const uploadChunks = async (file) => {
+    const totalSize = file.size;
+    const fileName = file.name;
+    const totalChunks = Math.ceil(totalSize / CHUNK_SIZE);
+    console.log("분할 이미지 개수 : " + totalChunks);
+
+
+    for (let i = 0; i < totalChunks; i++) { // 청크 사이즈로 분할 업로드
+      console.log(i + "번째 이미지 분할 업로드 중")
+      const start = i * CHUNK_SIZE;
+      const end = Math.min(start + CHUNK_SIZE, totalSize);
+      const chunk = file.slice(start, end);
+
+      const formData = new FormData();
+      formData.append('fileName', fileName);
+      formData.append('end', totalChunks.toString());
+      formData.append('image', chunk);
+      formData.append('password', this.password || 'undefined');
+      formData.append('title', this.title || 'undefined');
+      formData.append('index', i+1);
+
+      await this.$axios.post('/image', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
       });
-      Promise.all(uploadPromises)
-        .then(responses => {
-          console.log(responses); 
-        })
-        .catch(error => {
-          console.error(error);
-        })
-        .finally(() => {
-          console.log("모든 업로드 완료");
-          const uploadTime = (performance.now() - startTime) / 1000;
-          console.log(`작업 수행 시간: ${uploadTime}초`);
-          this.$EventBus.$emit('upload');
-          this.selectedFiles = [];
-          this.dialog = false;
-        });
-      },
+    }
+  };
+
+  const uploadPromises = this.selectedFiles.map(file => {
+    console.log("단일 이미지 파일 업로드 시작");
+    const fileName = file.name;
+    
+    if (file.size <= CHUNK_SIZE) {
+      console.log("1MB보다 작은 사이즈 이미지 업로드 시작")
+      const formData = new FormData();
+      formData.append('fileName', fileName);
+      formData.append('end', '1');
+      formData.append('index', '1');
+      formData.append('image', file);
+      formData.append('password', this.password || 'undefined');
+      formData.append('title', this.title || 'undefined');
+
+      return this.$axios.post('/image', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+    } else {
+      console.log("1MB보다 큰 사이즈 이미지 업로드 시작")
+      return uploadChunks(file);
+    }
+  });
+
+  Promise.all(uploadPromises)
+    .then(responses => {
+      console.log(responses);
+    })
+    .catch(error => {
+      console.error(error);
+    })
+    .finally(() => {
+      console.log("모든 업로드 완료");
+      const uploadTime = (performance.now() - startTime) / 1000;
+      console.log(`작업 수행 시간: ${uploadTime}초`);
+      this.$EventBus.$emit('upload');
+      this.selectedFiles = [];
+      this.dialog = false;
+    });
+},
+
+
+
+
+    
   },
 };
 </script>
